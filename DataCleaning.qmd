@@ -1,0 +1,46 @@
+---
+title: "Data Cleaning"
+author: "Emmett & Rachel"
+format: pdf
+editor: visual
+---
+
+```{r}
+#load libraries
+library(tidyverse)
+```
+
+**Data Cleaning Function**
+
+```{r}
+
+
+#' bike_data_clean
+#' 
+#' @description prepares bike data for use in simulation to optimize placement of bikes
+#' 
+#' @param data_frame read in a suitable data frame 
+#' @return an organized data frame without entries of the company resetting bikes, with properly formatted times, and with day and hour variables
+
+bike_data_clean<-function(data_frame){
+
+#data cleaning decisions: 
+
+#First, we don't need the observations where bikes are reset by the company—this is irrelevant to how many people are using bikes on a given day. 
+
+cleaned_data<-bike_data%>%
+  filter(start_station!="R", end_station != "R") %>%
+  
+#make sure start_time and end_time are correct formats
+   mutate(start_time = as.POSIXct(start_time, format = "%Y-%m-%d %H:%M:%S"),end_time   = as.POSIXct(end_time,   format = "%Y-%m-%d %H:%M:%S"))%>%
+  
+#create hour and day variables for use in functions
+#though our original data set has the same details for start and end times, we assume this will likely not be the case for all data.
+  
+  mutate(hour_start=hour(start_time), day_start=day(start_time), hour_end=hour(end_time), day_end=day(end_time)) 
+
+return(cleaned_data)
+}
+
+
+```
