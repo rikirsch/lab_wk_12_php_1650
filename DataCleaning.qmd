@@ -5,12 +5,14 @@ format: pdf
 editor: visual
 ---
 
+## Data Cleaning
+
 ```{r}
 #load libraries
 library(tidyverse)
 ```
 
-**Data Cleaning Function**
+**Function**
 
 ```{r}
 
@@ -37,10 +39,14 @@ cleaned_data<-bike_data%>%
 #create hour and day variables for use in functions
 #though our original data set has the same details for start and end times, we assume this will likely not be the case for all data.
   
-  mutate(hour_start=hour(start_time), day_start=day(start_time), hour_end=hour(end_time), day_end=day(end_time)) 
+  mutate(hour_start=hour(start_time), day_start=day(start_time), hour_end=hour(end_time), day_end=day(end_time)) %>%
+
+#drop customer type, this is irrelevant to this question
+  select(-c(customer_type))
 
 return(cleaned_data)
 }
 
 
 ```
+
