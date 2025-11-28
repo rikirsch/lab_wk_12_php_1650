@@ -5,27 +5,35 @@ format: pdf
 editor: visual
 ---
 
-
 Arrival Rates
+
 ```{r}
 #load libraries 
 library(tidyverse)
 ```
 
-
 ```{r}
-#'Average Arrival Rates for Bike Share Program
-#' @description finds the average arrival rates of bikes in the data per 
-#' @param cleaned_bike_df cleaned data frame of starting stations, destination stations, and time of the bikes leaving  (DOUBLE CHECK)
-#' @return x_hat the (FINISH)
+#'Average Arrival Rates for Bike Share Program 
+#' @description uses the data and models a non-homogeneous Poisson process
+#'  to calculate the average arrival rates in hour h from each pair
+#'  of starting and ending stations. 
+#' @param cleaned_bike_df cleaned data frame of starting stations (start_station), destination stations (end_station), and hour of bike arrivals (end_time). Each observation is one bike trip from a start_station to an end_station.
+#' @return res data frame of estimated average arrival rates (x_hat) for every combination of hour (h), start_station (s), and end_station (t).
 
 arrival_rates <- function(cleaned_bike_df){
-
-#First, we don't need the observations where bikes are reset by the company—this is irrelevant to how many people are using bikes on a given day.
-
-#make sure start_time and end_time are correct formats mutate(start_time = as.POSIXct(start_time, format = "%Y-%m-%d %H:%M:%S"),end_time = as.POSIXct(end_time, format = "%Y-%m-%d %H:%M:%S"))%\>%
-
-#create hour and day variables for use in functions #though our original data set has the same details for start and end times, we assume this will likely not be the case for all data.
-
-return(x_hat_df) 
+  x_hat_df <- cleaned_bike_df %>%
+    #add a column for day
+    mutate(day = day(end_time))
+  #find the number of days in the data
+  n_days <- length(unique(bike_df$day))
+  
+  res <- x_hat_df %>% 
+    #add a column for hour
+    mutate(hour =  hour(end_time)) %>%
+    #group by the the parameters of interest (h, s, t as hour, start_station, end_station)
+    group_by(hour, start_station, end_station) %>%
+    #calculate the x_hat
+    summarize(x_hat = n()/n_days)
+  return(res)
 }
+```
