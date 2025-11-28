@@ -9,85 +9,65 @@
 #'  for every combination of hour (h), start_station (s), and end_station (t).
 
 arrival_rates <- function(cleaned_bike_df){
-  x_hat_df <- cleaned_bike_df %>%
-    #add a column for day
-    mutate(day = day(end_time))
-  #find the number of days in the data
-  n_days <- length(unique(x_hat_df$day))
-  
-  res <- x_hat_df %>% 
-    #add a column for hour
-    mutate(hour =  hour(end_time)) %>%
+  #Find the avg number of bikes at hr h 
+  x_hat <- cleaned_bike_df %>% 
     #group by the the parameters of interest
     #(h, s, t as hour, start_station, end_station)
     group_by(hour, start_station, end_station) %>%
     #calculate the x_hat
-    summarize(x_hat = n()/n_days)
-  return(res)
-}
-
-
-
-
-
-
-
-#Code From Ed Stem with comments of how it relates to our code (will change)
-estimate_arrival_rates <- function(data) {
-  #This chunk is done in the data cleaning function 
-  # data <- data %>%
-  # mutate(
-  #   start_time = as.POSIXct(start_time, format = "%Y-%m-%d %H:%M:%S"),
-  #   end_time   = as.POSIXct(end_time,   format = "%Y-%m-%d %H:%M:%S")
-  # )
+    summarize(avg_trips = n()/length(unique(cleaned_bike_df$day_start)))
   
-  #This chunk is done in the bottom half of my code from lab 11 
-  #(where I define and return res)
-  # compute the average number of trips per hour between each pair
-  # x_hat <- data %>%
-  #   mutate(hour = hour(start_time)) %>%
-  #   filter(start_station != "R", end_station != "R") %>%
-  #   group_by(start_station, end_station, hour) %>%
-  #   summarise(avg_trips = n() / n_distinct(as_date(start_time)), 
-  #             .groups = "drop") 
   
-  # pivot longer to get change in count 
-  data$end_station <- as.character(data$end_station)
-  trips_long <- data %>%
+  # pivot longer to get change in count (number of bikes at the station)
+  cleaned_bike_df$end_station <- as.character(cleaned_bike_df$end_station)
+  trips_long <- cleaned_bike_df %>%
+    #make each observation into two rows, one row for the starting information 
+    #(station and time) and one row for the ending information (station and time)
+    #station and time are the new columns
     pivot_longer(cols = c("start_station", "start_time", 
                           "end_station", "end_time"),
                  names_to = c("type", ".value"),   
                  names_pattern = "(start|end)_(.*)") %>%
+    #add a col change that is 1 if a bike is arriving at the station (end)
+    #and -1 is a bike is leaving the station (start)
     mutate(change = ifelse(type == "start", -1, 1),
            hour = hour(time)) %>%
+    #keep the columns for station (#), time (#), hour (hour time), change(-1, 1)
     select(station, time, hour, change)
+  
   
   # add hour markers so we can get cumulative time
   dates <- unique(as_date(trips_long$time))
   hours <- c(seq(0,23,1), seq(0,23,1)+0.9999999)
   stations <- unique(trips_long$station)
+  #add all possible combinations of day, hour, and station
   hr_pts <- expand.grid(time = dates, hour = hours, 
                         station = stations) %>%
+    #make time in terms of day and hour and add a column for hour
     mutate(time = as.POSIXct(time) + hour*60*60,
            hour = hour(time))
+  #give the stand in time/station pairs a neutral (0) change (instead of -1, 1)
   hr_pts$change <- 0
+  #bind the time/station pairs with the neutral changes to the long data frame
   trips_long <- rbind(trips_long, hr_pts)
   
-  # find average availability 
+  
+  # find average bike availability 
   alpha_hat <- trips_long %>%
     group_by(station) %>%
     #filter(station != "R") %>% # is in the data cleaning, can still keep as a check
-    arrange(time) %>%  #order it by time
+    #order it by time
+    arrange(time) %>%  
     #sum the number of bikes at the place 
     #(bc you're subtracting one for every bike starting there
     #and adding one for every bike ending there)
     mutate(count = cumsum(change), 
-           #mututate to add a col for the date
+           #mutate to add a col for the date
            date = as_date(time)) %>%
     group_by(station, hour, date) %>%
     #add a column to find the amnt of time a bike is available at each station/hr/date
     summarize(time_avail = 
-                sum(difftime(time, lag(time), units="hours")*(count > 0), 
+                sum(difftime(time, lag(time), units = "hours")*(count > 0), 
                     na.rm = TRUE)) %>%
     #add a col to find the average amnt of time a bike is available at each station/hr/date
     summarize(avg_avail = mean(time_avail)) %>%
@@ -97,11 +77,13 @@ estimate_arrival_rates <- function(data) {
   
   # join the data and compute arrival rates
   mu_hat <- x_hat %>%
+    #HAVING ISSUES WITH THE JOIN, NEED TO FIX WHAT THE COLS ARE CALLED TO HAVE A VALID JOIN
     left_join(alpha_hat, by = c("start_station" = "station", "hour")) %>%
     #add a col that is the avg_trips/avg_available_bikes if avg_avail > 0
-    #bc you don't want to decide by 0 or calculate the arrival rates
+    #since you don't want to divide by 0 or calculate the arrival rates
     #if there are no bikes there
     mutate(mu_hat = ifelse(avg_avail > 0, avg_trips / avg_avail, NA))
   
   return(mu_hat)
 }
+
