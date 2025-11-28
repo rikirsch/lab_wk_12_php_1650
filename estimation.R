@@ -76,34 +76,35 @@ estimate_arrival_rates <- function(data) {
   # find average availability 
   alpha_hat <- trips_long %>%
     group_by(station) %>%
-    filter(station != "R") %>%
-    arrange(time) %>% 
-    mutate(count = cumsum(change),
+    #filter(station != "R") %>% # is in the data cleaning, can still keep as a check
+    arrange(time) %>%  #order it by time
+    #sum the number of bikes at the place 
+    #(bc you're subtracting one for every bike starting there
+    #and adding one for every bike ending there)
+    mutate(count = cumsum(change), 
+           #mututate to add a col for the date
            date = as_date(time)) %>%
     group_by(station, hour, date) %>%
+    #add a column to find the amnt of time a bike is available at each station/hr/date
     summarize(time_avail = 
                 sum(difftime(time, lag(time), units="hours")*(count > 0), 
                     na.rm = TRUE)) %>%
+    #add a col to find the average amnt of time a bike is available at each station/hr/date
     summarize(avg_avail = mean(time_avail)) %>%
+    #round the avg_avail
     mutate(avg_avail = round(as.numeric(avg_avail), digits = 4)) %>%
     ungroup()
   
   # join the data and compute arrival rates
   mu_hat <- x_hat %>%
     left_join(alpha_hat, by = c("start_station" = "station", "hour")) %>%
+    #add a col that is the avg_trips/avg_available_bikes if avg_avail > 0
+    #bc you don't want to decide by 0 or calculate the arrival rates
+    #if there are no bikes there
     mutate(mu_hat = ifelse(avg_avail > 0, avg_trips / avg_avail, NA))
   
   return(mu_hat)
 }
-
-# Load the sample dataset
-bike_data <- read.csv("sample_bike.csv")
-
-# Estimate arrival rates
-arrival_rate_ex <- estimate_arrival_rates(bike_data)
-
-# View the results
-print(arrival_rate_ex, n = 10)
 
 
 
@@ -119,7 +120,7 @@ estimate_arrival_rates <- function(data) {
   # compute the average number of trips per hour between each pair
   x_hat <- data %>%
     mutate(hour = hour(start_time)) %>%
-    filter(start_station != "R", end_station != "R") %>%
+    #filter(start_station != "R", end_station != "R") %>% #is in the data cleaning
     group_by(start_station, end_station, hour) %>%
     summarise(avg_trips = n() / n_distinct(as_date(start_time)), 
               .groups = "drop") 
@@ -168,15 +169,5 @@ estimate_arrival_rates <- function(data) {
   
   return(mu_hat)
 }
-
-# Load the sample dataset
-bike_data <- read.csv('/Users/rachelkirsch/Downloads/sample_bike.csv')
-
-# Estimate arrival rates
-arrival_rate_ex2 <- estimate_arrival_rates(bike_data)
-
-# View the results
-print(arrival_rate_ex2, n = 10)
-
 
 
