@@ -55,12 +55,10 @@ arrival_rates <- function(cleaned_bike_df){
   # find average bike availability 
   alpha_hat <- trips_long %>%
     group_by(station) %>%
-    #filter(station != "R") %>% # is in the data cleaning, can still keep as a check
-    #order it by time
+    #order data by time
     arrange(time) %>%  
     #sum the number of bikes at the place 
-    #(bc you're subtracting one for every bike starting there
-    #and adding one for every bike ending there)
+    #-1 for every bike starting there and +1 for every bike ending there
     mutate(count = cumsum(change), 
            #mutate to add a col for the date
            date = as_date(time)) %>%
@@ -77,11 +75,11 @@ arrival_rates <- function(cleaned_bike_df){
   
   # join the data and compute arrival rates
   mu_hat <- x_hat %>%
-    #HAVING ISSUES WITH THE JOIN, NEED TO FIX WHAT THE COLS ARE CALLED TO HAVE A VALID JOIN
     left_join(alpha_hat, by = c("start_station" = "station", "hour")) %>%
     #add a col that is the avg_trips/avg_available_bikes if avg_avail > 0
     #since you don't want to divide by 0 or calculate the arrival rates
     #if there are no bikes there
+    #NEED TO RENAME MU_HAT
     mutate(mu_hat = ifelse(avg_avail > 0, avg_trips / avg_avail, NA))
   
   return(mu_hat)
