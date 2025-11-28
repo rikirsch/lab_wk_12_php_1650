@@ -1,1 +1,31 @@
+---
+title: "Arrival Rates"
+author: "Emmett & Rachel"
+format: pdf
+editor: visual
+---
 
+
+Arrival Rates
+```{r}
+#load libraries 
+library(tidyverse)
+```
+
+
+```{r}
+#'Average Arrival Rates for Bike Share Program
+#' @description finds the average arrival rates of bikes in the data per 
+#' @param cleaned_bike_df cleaned data frame of starting stations, destination stations, and time of the bikes leaving  (DOUBLE CHECK)
+#' @return x_hat the (FINISH)
+
+arrival_rates <- function(cleaned_bike_df){
+
+#First, we don't need the observations where bikes are reset by the company—this is irrelevant to how many people are using bikes on a given day.
+
+#make sure start_time and end_time are correct formats mutate(start_time = as.POSIXct(start_time, format = "%Y-%m-%d %H:%M:%S"),end_time = as.POSIXct(end_time, format = "%Y-%m-%d %H:%M:%S"))%\>%
+
+#create hour and day variables for use in functions #though our original data set has the same details for start and end times, we assume this will likely not be the case for all data.
+
+return(x_hat_df) 
+}
