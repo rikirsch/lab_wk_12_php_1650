@@ -5,7 +5,7 @@
 #' @param cleaned_bike_df cleaned data frame of starting stations (start_station),
 #'  destination stations (end_station), and hour of bike arrivals (end_time).
 #'   Each observation is one bike trip from a start_station to an end_station.
-#' @retufrn res data frame of estimated average arrival rates (x_hat)
+#' @return res data frame of estimated average arrival rates (x_hat)
 #'  for every combination of hour (h), start_station (s), and end_station (t).
 
 arrival_rates <- function(cleaned_bike_df){
