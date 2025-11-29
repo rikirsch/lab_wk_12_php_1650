@@ -20,73 +20,7 @@ NOTE: THIS CODE CHUNK IS NOT FOR INCLUSION IN FINAL FUNCTION. THIS IS FOR CURREN
 #create dummy arrival rates data set 
 bike_data<-read.csv('/Users/juliadubnoff/Downloads/sample_bike.csv')
 bike_data<-bike_data_clean(bike_data)
-
-estimate_arrival_rates <- function(data) {
-    data <- data %>%
-    mutate(
-      start_time = as.POSIXct(start_time, format = "%Y-%m-%d %H:%M:%S"),
-      end_time   = as.POSIXct(end_time,   format = "%Y-%m-%d %H:%M:%S")
-    )
-  
-  # compute the average number of trips per hour between each pair
-  x_hat <- data %>%
-    mutate(hour = hour(start_time)) %>%
-    filter(start_station != "R", end_station != "R") %>%
-    group_by(start_station, end_station, hour) %>%
-    summarise(avg_trips = n() / n_distinct(as_date(start_time)), 
-              .groups = "drop") 
-  
-  # pivot longer to get change in count 
-  data$end_station <- as.character(data$end_station)
-  trips_long <- data %>%
-    pivot_longer(cols = c("start_station", "start_time", 
-                          "end_station", "end_time"),
-                names_to = c("type", ".value"),   
-                names_pattern = "(start|end)_(.*)") %>%
-    mutate(change = ifelse(type == "start", -1, 1),
-           hour = hour(time)) %>%
-    select(station, time, hour, change)
-  
-  # add hour markers so we can get cumulative time
-  dates <- unique(as_date(trips_long$time))
-  hours <- c(seq(0,23,1),seq(0,23,1)+0.9999999)
-  stations <- unique(trips_long$station)
-  hr_pts <- expand.grid(time = dates, hour = hours, 
-                        station = stations) %>%
-    mutate(time = as.POSIXct(time) + hour*60*60,
-           hour = hour(time))
-  hr_pts$change <- 0
-  trips_long <- rbind(trips_long, hr_pts)
-  
-  # find average availability 
-  alpha_hat <- trips_long %>%
-    group_by(station) %>%
-    filter(station != "R") %>%
-    arrange(time) %>% 
-    mutate(count = cumsum(change),
-           date = as_date(time)) %>%
-    group_by(station, hour, date) %>%
-    summarize(time_avail = 
-                sum(difftime(time, lag(time), units="hours")*(count > 0), 
-                  na.rm = TRUE)) %>%
-    summarize(avg_avail = mean(time_avail)) %>%
-    mutate(avg_avail = round(as.numeric(avg_avail), digits = 4)) %>%
-    ungroup()
-  
-  # join the data and compute arrival rates
-  mu_hat <- x_hat %>%
-    left_join(alpha_hat, by = c("start_station" = "station", "hour")) %>%
-    mutate(mu_hat = ifelse(avg_avail > 0, avg_trips / avg_avail, NA))
-  
-  return(mu_hat)
-}
-
-
-# Estimate arrival rates
-arrival_rates <- estimate_arrival_rates(bike_data)
-
-
-
+arrival_rates<-arrival_rates(bike_data)
 
 
 #create dummy bike placement data set
@@ -102,15 +36,64 @@ bike_placement<-bike_data%>%
 
 ```{r}
 
-run_a_day<-function(arrival_rates_df, bike_placement){
-  
-  arrival_rates_df<-arrival_rates_df%>%
+  lambda_max_dummy<-arrival_rates%>%
     group_by(start_station, end_station)%>%
     summarize(lambda_max=max(mu_hat))
+  
+  
+run_a_day <- function(arrival_rates_df, bike_placement){
+  
+  simulated_arrivals <- arrival_rates_df %>%
+    #sort by start and end stations so to create samples based on each pair
+    group_by(start_station, end_station) %>%
+    #find lambda_max, the maximum arrival rate observed, for each pair of stations
+    summarize(lambda_max=max(mu_hat)) %>%
+    #initialize number of arrivals per hour in simulation
+    mutate(arrivals_inital_sim=0)
+  
+    #for each pair of start and end stations, create an exponential sample based on lambda_max. 
+  
+  
+    #breaking it down: it is an exponential variable between each instance actually. 
+    
+  
+  
+    #cycle through each row in the the max_arrival_rates_df. This will allow us to index the lambda_max of each particular row
+  
+    for(i in 1:nrow(simulated_arrivals)) {
+      
+      #create data frame sample_arrivals which will store arrival number and time, as well as the total time since the start of the day
+      sample_arrivals <- data.frame("arrival_number" = c(), "arrival_time"=c(), "total_time" =c())
+      
+      #initialize time variable, counting number of hours since the day started. once 24 hours have passed, the day is complete.
+      total_time <- 0
+      
+      #initialize the index, add 1 after each round
+      index <- 0
+    
+      #calculate rate of arrival for each minute 
+      while (total_time <= 24) {
+        
+        #find the arrival time for this observation
+        this_arrival_time <- rexp(1, rate = simulated_arrivals$lambda_max[i])
+        
+        #add one to the index
+        index <- index + 1
+        
+        #update total time
+        total_time <- total_time + this_arrival_time
+        
+        #store data in sample_arrivals
+        new_entry <- data.frame("arrival_number" = index, "arrival_time" = this_arrival_time, "total_time" = total_time)
+        sample_arrivals<-rbind(sample_arrivals, new_entry)
+        
+      }
+    
+    
+    #how do I output this???
+    
+    }
 
-  
-  
-  
   
   
   return(unhappy_customers, times_unstocked)
