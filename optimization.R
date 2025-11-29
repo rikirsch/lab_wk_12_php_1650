@@ -1,4 +1,5 @@
 #source(RunADay)
+
 #'Optimizing Bike Placement for Bike Share Program 
 #' @description runs the RunADay simulation code n_day times to find the best 
 #' initial bike placement for k bikes
@@ -11,14 +12,40 @@
 #' @return res table of the number of bikes to place at each station
 #' at the start of the day
 
+
+#NOTES/QUESTIONS:
+#run_a_day is the simulation function,
+#run_a_day should return a df with the simulated start_station, end_station, time, and unhappy_customers 
+#(1 - bike was not there, 0 - bike was there)
+
+
+#how do I call the arrival_rates_df, do I call optimize from estimation? (then I can leave it like this)
+#but then I'll need to pass the num_bikes, num_days, and bike_step_size into the estimation params
+
+
+
 optimize <- function(arrival_rates_df, num_bikes, num_days = 10, bike_step_size = 1){
-  replicate(n = num_days, run_a_day(arrival_rates_df)) #run_a_day is the simulation function,
-  #run_a_day should return a df with the simulated start_station, end_station, time, and happy_rating 
-  #(1 - bike was there, 0 - bike was not there)
-  #how do I call the arrival_rates_df, do I call optimize from estimation? (then I can leave it like this)
-  #but then I'll need to pass the num_bikes, num_days, and bike_step_size into the estimation params
-  placed_bikes = 0
-  while(placed_bikes < num_bikes){
-    #look through the 
+  #make an empty vector that will store the number of bikes at each numbered station
+  bike_placement <- c(rep(0, times = n_distinct(arrival_rates_df$end_station)))
+  #should I store these in a dataframe instead?
+  #bike_placement <- data.frame()
+  
+  #while not all bikes have been placed
+  while(sum(bike_placement) < num_bikes){
+    #simulate placement for num_days
+    sim_placement <- replicate(n = num_days, run_a_day(arrival_rates_df, bike_placement))
+    sim_placement <- sim_placement %>%
+      #group by the starting station and find the average number of unhappy customers at each starting station
+      group_by(start_station) %>%
+      summarize(avg_unhappy = mean(unhappy_customers))
+    #find which station has the most unhappy customers
+    unhappy_station <- which.max(sim_placement$avg_unhappy)
+    #place bike_step_size number of bikes at the station with the most unhappy customers
+    bike_placement[unhappy_station] <- bike_placement[unhappy_station] + bike_step_size
+  
   }
+  
+  #return the number of bikes that should be placed at each station
+  return(bike_placement)
 }
+
