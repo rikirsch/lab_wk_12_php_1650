@@ -50,14 +50,10 @@ run_a_day <- function(arrival_rates_df, bike_placement){
     summarize(lambda_max=max(mu_hat)) %>%
     #initialize number of arrivals per hour in simulation
     mutate(arrivals_inital_sim=0)
-  
-    #for each pair of start and end stations, create an exponential sample based on lambda_max. 
-  
-  
-    #breaking it down: it is an exponential variable between each instance actually. 
     
   
-  
+    #for each pair of start and end stations, create an exponential sample based on lambda_max. 
+    
     #cycle through each row in the the max_arrival_rates_df. This will allow us to index the lambda_max of each particular row
   
     for(i in 1:nrow(simulated_arrivals)) {
@@ -80,8 +76,14 @@ run_a_day <- function(arrival_rates_df, bike_placement){
         #add one to the index
         index <- index + 1
         
-        #update total time
+        #update total time 
         total_time <- total_time + this_arrival_time
+        
+        #determine whether or not to keep with thinning
+        simulated_time_output <- thinning(total_time, arrival_rates_df)
+        
+        
+        
         
         #store data in sample_arrivals
         new_entry <- data.frame("arrival_number" = index, "arrival_time" = this_arrival_time, "total_time" = total_time)
