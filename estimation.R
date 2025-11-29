@@ -11,11 +11,13 @@
 arrival_rates <- function(cleaned_bike_df){
   #Find the avg number of bikes at hr h 
   x_hat <- cleaned_bike_df %>% 
+    #filter out Reset runs here so that it is still included in calculating the dates
+    filter(start_station != "R", end_station != "R") %>%
     #group by the the parameters of interest
     #(h, s, t as hour, start_station, end_station)
     group_by(hour, start_station, end_station) %>%
     #calculate the x_hat
-    summarize(avg_trips = n()/length(unique(cleaned_bike_df$day_start)))
+    summarize(avg_trips = n()/n_distinct(as_date(start_time)))
   
   
   # pivot longer to get change in count (number of bikes at the station)
