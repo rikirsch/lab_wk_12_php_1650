@@ -4,6 +4,4 @@ I want to run the functions we have created to see how our program is working
 bikes <- read.csv('/Users/rachelkirsch/Downloads/sample_bike.csv')
 my_cleaned_bikes <- bike_data_clean(bikes)
 data_samp_estim_arriv <- arrival_rates(my_cleaned_bikes)
-
-#print(arrival_rates(my_cleaned_bikes), n = 10)
 ```
