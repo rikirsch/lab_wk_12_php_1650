@@ -26,15 +26,17 @@ thinning <- function(arrival_times, elapsed_time, arrival_rates_df,
   
   #prob_keep is consistent across all rows left,
   #so we can index the first input and it will be equal
-  prob<- temp_arrival_rates_df$prob_keep
+  prob<- temp_arrival_rates_df$prob_keep[1]
   
+  #run flip a coin w rbinom: 1 success out of 1 trial with probability =prob. 
+  #this will equal 0 or 1.
+  result<- rbinom(1, 1, prob)
   
-  #run flip a coin w rbinom— next STEP
+  #depending on result, either add an entry to arrival times or not
+  if (result==1){
+    arrival_times <- c(arrival_times, elapsed_time)
+  }
   
+  #return the arrival_times: this will be changed or not
+  return(arrival_times)
 }
-
-TEST_elapsed_time<- 2.5
-TESTinterval<-floor(TEST_elapsed_time)
-
-
-TESTlambda <- OBSERVED_arrival_rates[hour == 1 && start_station == 4 == end_station = 6]$mu_hat

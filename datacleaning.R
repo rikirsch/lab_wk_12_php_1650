@@ -1,20 +1,3 @@
----
-title: "Data Cleaning"
-author: "Emmett & Rachel"
-format: pdf
-editor: visual
----
-
-## Data Cleaning
-
-```{r}
-#load libraries
-library(tidyverse)
-```
-
-**Function**
-
-```{r}
 #' bike_data_clean
 #' 
 #' @description prepares bike data for use in simulation to optimize placement of bikes
@@ -23,30 +6,28 @@ library(tidyverse)
 #' @return an organized data frame without entries of the company resetting bikes, with properly formatted times, and with day and hour variables
 
 bike_data_clean <- function(bike_data){
-
-#data cleaning decisions: 
-
-#First, we don't need the observations where bikes are reset by the company—this is irrelevant to how many people are using bikes on a given day. 
-
+  
+  #data cleaning decisions: 
+  
+  #First, we don't need the observations where bikes are reset by the company—this is irrelevant to how many people are using bikes on a given day. 
+  
   cleaned_data <- bike_data %>%
     #filter(start_station !="R" & end_station != "R") %>% #commenting out to fix bug in estimation
-  
+    
     #make sure start_time and end_time are correct formats
     mutate(start_time = as.POSIXct(start_time, format = "%Y-%m-%d %H:%M:%S"), 
            end_time = as.POSIXct(end_time, format = "%Y-%m-%d %H:%M:%S")) %>%
-  
+    
     #create hour and day variables for use in functions
     #though our original data set has the same details for start and end times,
     #we assume this will likely not be the case for all data.
-  
+    
     mutate(hour = hour(start_time), day_start = day(start_time),
            hour_end = hour(end_time), day_end = day(end_time)) %>%
-
+    
     #drop customer type, this is irrelevant to this question
     select(-c(customer_type))
-
+  
   return(cleaned_data)
 }
 
-
-```
