@@ -15,7 +15,7 @@ run_a_day <- function(arrival_rates_df, bike_placement){
   
   #FIND LAMBDA MAX FOR EACH PAIR OF STATIONS.
   
-  simulated_arrivals <- arrival_rates_df %>%
+  lambda_maxes <- arrival_rates_df %>%
     #sort by start and end stations so to create samples based on each pair
     group_by(start_station, end_station) %>%
     #find lambda_max, the maximum arrival rate observed, for each pair of stations
@@ -38,48 +38,68 @@ run_a_day <- function(arrival_rates_df, bike_placement){
   #for each pair of stations, draw exponential random variables until the end 
   #of the day, testing each to see if it is eliminated by thinning
   
+  
+  #initialize simulated_arrivals
+  simulated_arrivals <- data.frame("start_station" = 
+                                     "TEMP", 
+                                   "end_station" = "TEMP", 
+                                   "arrival_time" = "TEMP")
+  
   #set up for loop
-  for(i in 1:nrow(simulated_arrivals)) {
+  for(i in 1:nrow(lambda_maxes)) {
     
+    #update start and end stations
+    start_station = lambda_maxes$start_station[i]
+    end_station = lambda_maxes$end_station[i]
+  
     #initialize time variable, elapsed_time  = hours since day started
     #once 24 hours have passed, the day is complete. 
     elapsed_time <- 0
-    
-    #initialize vector storing times at which arrivals come to the stations
-    arrival_times <- c()
     
     #establish while loop until end of day
     while (elapsed_time < 24) {
       
       #store random variable of the interval in which next arrival comes
-      next_arrival<-rexp(1, rate =  simulated_arrivals$lambda_max[i])
+      next_arrival<-rexp(1, rate =  lambda_maxes$lambda_max[i])
+      
       #update elapsed time to designate time passed
       elapsed_time <- elapsed_time + next_arrival
       
       
-      #RUN THINNING FUNCTION to see if observation will be kept, 
-      #should return a vector
-      arrival_times<-thinning(arrival_times, elapsed_time, arrival_rates_df, 
-                              start, end)
-      
-      
-      
+      #RUN THINNING FUNCTION to see if observation will be kept
+      keep <- thinning(elapsed_time, arrival_rates_df, 
+                       start_station, end_station)
+      print(keep)
+      #if keep is = 1, add a new row to simulated arrivals. otherwise, 
+      # do nothing
+      if (keep==1){
+        new_row <- data.frame("start_station" = 
+                                 start_station, 
+                               "end_station" = end_station, 
+                               "arrival_time" = elapsed_time)
+        simulated_arrivals <- rbind(simulated_arrivals, new_row)
+      }
+
+    #end while loop
     }
-    
-    
   
+  #end for loop
   }
+  #remove temp row
+  simulated_arrivals <- simulated_arrivals %>% 
+    filter(start_station != "TEMP")
   
+  #this should be all the arrival simulated, for each pair of stations
   
+  #NEXT: order all the arrivals so that one can more easier check if bikes are
+  #available
+  simulated_arrivals <- simulated_arrivals %>% 
+    arrange(arrival_time)
+  
+  return(simulated_arrivals)
   
 }
   
 
-
-CURRENT_TEST <- OBSERVED_arrival_rates %>%
-  #sort by start and end stations so to create samples based on each pair
-  group_by(start_station, end_station) %>%
-  #find lambda_max, the maximum arrival rate observed, for each pair of stations
-  summarize(lambda_max=max(mu_hat)) 
 
 

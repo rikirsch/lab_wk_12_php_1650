@@ -2,19 +2,17 @@
 #' @description determines if simulated data based of lambda_max will be kept 
 #' or not, based on observed hourly arrival rates
 #' 
-#' @param arrival_times vector storing all times in which a person has arrived
-#'  (and not been eliminated by thinning) in this simulation so far
 #' @param elapsed_time total time between start of day and this arrival
 #' @param arrival_rates_df data frame of estimated average arrival rates (x_hat)
 #' for every combination of hour (h), start_station (s), and end_station (t).
 #' @param starting_station 
 #' @param ending_station
 #' 
-#' @return vector arrival_times, either with the new elapsed_time added to it, 
-#' or not depending on what function determines
+#' @return boolean keep that = 1 if the arrival time will be added to the data, 
+#' if it = 0 it will be discarded 
 
 
-thinning <- function(arrival_times, elapsed_time, arrival_rates_df, 
+thinning <- function(elapsed_time, arrival_rates_df, 
                      starting_station, ending_station) {
           
   #find which set of hours the time belongs to, store the lower_bound
@@ -22,7 +20,8 @@ thinning <- function(arrival_times, elapsed_time, arrival_rates_df,
   
   #create temporary arrival_rates_df with only what we need
   temp_arrival_rates_df <- arrival_rates_df %>%
-      filter(hour=lower_bound, start_station=starting_station, end_station=ending_station)
+      filter(hour==lower_bound, start_station==starting_station, 
+             end_station==ending_station)
   
   #prob_keep is consistent across all rows left,
   #so we can index the first input and it will be equal
@@ -30,13 +29,7 @@ thinning <- function(arrival_times, elapsed_time, arrival_rates_df,
   
   #run flip a coin w rbinom: 1 success out of 1 trial with probability =prob. 
   #this will equal 0 or 1.
-  result<- rbinom(1, 1, prob)
+  keep <- rbinom(1, 1, prob)
   
-  #depending on result, either add an entry to arrival times or not
-  if (result==1){
-    arrival_times <- c(arrival_times, elapsed_time)
-  }
-  
-  #return the arrival_times: this will be changed or not
-  return(arrival_times)
+  return(keep)
 }
