@@ -14,33 +14,10 @@ editor: visual
 library(tidyverse)
 ```
 
-NOTE: THIS CODE CHUNK IS NOT FOR INCLUSION IN FINAL FUNCTION. THIS IS FOR CURRENT WORKING DOCUMENT, SO THAT WE HAVE REASONABLE INPUT DATAFRAMES TO WORK FROM IN THE MEANTIME.
-
-```{r}
-#create dummy arrival rates data set 
-bike_data<-read.csv('/Users/juliadubnoff/Downloads/sample_bike.csv')
-bike_data<-bike_data_clean(bike_data)
-arrival_rates<-arrival_rates(bike_data)
-
-
-#create dummy bike placement data set
-bike_placement<-bike_data%>%
-  group_by(end_station)%>%
-  summarize(bikes_to_start=5)%>%
-  rename(station=end_station)
-  
-
-```
-
 **Function:**
 
 ```{r}
 
-  lambda_max_dummy<-arrival_rates%>%
-    group_by(start_station, end_station)%>%
-    summarize(lambda_max=max(mu_hat))
-  
-  
 run_a_day <- function(arrival_rates_df, bike_placement){
   
   simulated_arrivals <- arrival_rates_df %>%
@@ -79,8 +56,13 @@ run_a_day <- function(arrival_rates_df, bike_placement){
         #update total time 
         total_time <- total_time + this_arrival_time
         
+        #find start and end stations
+        current_start_station <- simulated_arrivals$start_station[i]
+        current_end_station <- simulated_arrivals$end_station[i]
+        
         #determine whether or not to keep with thinning
-        simulated_time_output <- thinning(total_time, arrival_rates_df)
+        simulated_time_output <- thinning (arrival_times, elapsed_time, arrival_rates_df, 
+                     current_start_station, current_end_station) 
         
         
         
