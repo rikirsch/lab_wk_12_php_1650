@@ -33,14 +33,16 @@ simulated_arrivals <- data.frame("start"=c(2), "end"=c(3), "arrival_time"=c())
 OBSERVED_bike_data<-read.csv('/Users/juliadubnoff/Downloads/sample_bike.csv')
 OBSERVED_bike_data<-bike_data_clean(OBSERVED_bike_data)
 OBSERVED_arrival_rates<-arrival_rates(OBSERVED_bike_data)
+
 #create dummy bike placement data set
 TEST_bike_placement<-OBSERVED_bike_data%>%
   group_by(end_station)%>%
-  summarize(bikes_to_start=5)%>%
+  summarize(num_initial_bikes=5)%>%
   rename(station=end_station)
 
 
 TEST_arrivals<-run_a_day(OBSERVED_arrival_rates, TEST_bike_placement)
+
 #something is wrong with thinning
 # 
 # TEST_lambda_maxes <- OBSERVED_arrival_rates %>%

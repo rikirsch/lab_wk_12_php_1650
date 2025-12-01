@@ -19,17 +19,21 @@ thinning <- function(elapsed_time, arrival_rates_df,
   lower_bound<-floor(elapsed_time)
   
   #create temporary arrival_rates_df with only what we need
+  #use which
+  #find the row of arrival rates we need 
+  
   temp_arrival_rates_df <- arrival_rates_df %>%
       filter(hour==lower_bound, start_station==starting_station, 
-             end_station==ending_station)
-  
+             end_station==ending_station) %>%
+      mutate(prob_keep= case_when(is.na(prob_keep) ~ 0, TRUE ~ prob_keep))
+             
   #prob_keep is consistent across all rows left,
   #so we can index the first input and it will be equal
-  prob<- temp_arrival_rates_df$prob_keep[1]
+  prob_bike<- temp_arrival_rates_df$prob_keep[1]
   
   #run flip a coin w rbinom: 1 success out of 1 trial with probability =prob. 
   #this will equal 0 or 1.
-  keep <- rbinom(1, 1, prob)
+  keep <- rbinom(1, 1, prob_bike)
   
   return(keep)
 }

@@ -1,3 +1,4 @@
+#note: UNCOMMMENT ONCE BUG IS FIXED source(thinning)
 #'run_a_day function
 #'
 #' @description simulates a singular day of bike usage based off the observed
@@ -5,11 +6,10 @@
 #' 
 #' @param arrival_rates_df data frame of estimated average arrival rates (x_hat)
 #'  for every combination of hour (h), start_station (s), and end_station (t).
-#' @param bike_placement data frame showing how many bikes (bikes_initial) are 
-#' initially placed are each starting_station
+#' @param bike_placement data frame showing how many bikes (num_initial_bikes) are 
+#' initially placed are each station
 #' 
-#' @return data frame showing number of unhappy people at each stop at 
-#' each hour of the day
+#' @return data frame showing the total number of unhappy people that come to each stop
 
 run_a_day <- function(arrival_rates_df, bike_placement){
   
@@ -31,7 +31,7 @@ run_a_day <- function(arrival_rates_df, bike_placement){
   arrival_rates_df <- arrival_rates_df %>%
     mutate(prob_keep = mu_hat/ lambda_max) %>%
     #now, get rid of NAs for prob_keep and replace them with 0
-    mutate(prob_keep = case_when( is.na(prob_keep) ~ 0, TRUE ~ prob_keep))
+    mutate(prob_keep = case_when( is.na (prob_keep) ~ 0, TRUE ~ prob_keep))
   
   
   #SAMPLE NEW ARRIVAL TIMES
@@ -94,12 +94,65 @@ run_a_day <- function(arrival_rates_df, bike_placement){
   #NEXT: order all the arrivals so that one can more easier check if bikes are
   #available
   simulated_arrivals <- simulated_arrivals %>% 
-    arrange(arrival_time)
+    arrange(arrival_time)  %>%
+    #rename column name simulated arrivals start_station to station
+    rename(station = start_station)
   
-  return(simulated_arrivals)
+  #join data set with bikes 
+  bike_simulation <- left_join(simulated_arrivals, bike_placement, by = station)
+  
+  #mutate to include unhappy_customers, event_success
+  bike_simulation <- bike_simulation%>%
+    mutate(unhappy_customers=0) %>%
+    rename(bikes_available = num_initial_bikes)
+  
+  #cycle through each row of bike_simulation to see if each an event occurs.
+  for (i in nrow(bike_simulation)){
+    #test if bike available 
+    if (bike_simulation$bikes_available[i] >=1){
+      
+      #do NOT add an unhappy customer. 
+      
+      #cycle through rows below and add a bike to each occurrence of the end 
+      #station that bike is moved to and subtract a bike from each occurence of 
+      #the start station that bike is taken from
+      
+      for (j in (i+1):nrow(bike_simulation)){
+        
+        #if start stations are the same:
+        if (bike_simulation$station[j] == bike_simulation$station[i]){
+          bike_simulation$bikes_available[j] <- bike_simulation$bikes_available[j] -1
+          
+        }
+        
+        #if end stations are the same: 
+        if (bike_simulation$end_station[j] == bike_simulation$end_station[i]){
+          bike_simulation$bikes_available[j] <- bike_simulation$bikes_available[j] +1
+          
+        }
+      
+      }
+    #if bikes are NOT available 
+    else {
+      #turn the value of the unhapphy_customers in the row to 1
+      bike_simulation$unhappy_customers[i] <- 1
+    }
+      
+    }
+    
+    
+  }
+  
+  #total number of unhappy people to arrive at each station through the day
+  bike_simulation <- bike_simulation%>% 
+    group_by(station) %>%
+    summarize(unhappy_customers=sum(unhappy_customers)) %>%
+    #order by start station
+    arrange(station)
+  
+  #return data frame
+  return(bike_simulation)
   
 }
   
-
-
 
