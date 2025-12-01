@@ -1,4 +1,4 @@
-#source(RunADay)
+#source(runaday) #uncomment once bug is fixed
 
 #'Optimizing Bike Placement for Bike Share Program 
 #' @description runs the RunADay simulation code n_day times to find the best 
