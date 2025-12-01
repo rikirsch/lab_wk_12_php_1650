@@ -14,8 +14,7 @@ bike_data_clean <- function(bike_data){
   #this is irrelevant to how many people are using bikes on a given day. 
   
   cleaned_data <- bike_data %>%
-    #filter(start_station !="R" & end_station != "R") %>% #commenting out to fix bug in estimation
-    
+
     #make sure start_time and end_time are correct formats
     mutate(start_time = as.POSIXct(start_time, format = "%Y-%m-%d %H:%M:%S"), 
            end_time = as.POSIXct(end_time, format = "%Y-%m-%d %H:%M:%S")) %>%
