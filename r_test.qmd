@@ -1,9 +1,0 @@
-I want to run the functions we have created to see how our program is working
-
-```{r}
-bikes <- read.csv('/Users/rachelkirsch/Downloads/sample_bike.csv')
-my_cleaned_bikes <- bike_data_clean(bikes)
-data_samp_estim_arriv <- arrival_rates(my_cleaned_bikes)
-
-prefered_placement <- optimize(data_samp_estim_arriv, num_bikes = 100, bike_step_size = 5)
-```
