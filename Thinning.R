@@ -31,7 +31,7 @@ thinning <- function(elapsed_time, arrival_rates_df,
   #so we can index the first input and it will be equal
   prob_bike<- temp_arrival_rates_df$prob_keep[1]
   
-  #run flip a coin w rbinom: 1 success out of 1 trial with probability =prob. 
+  #run flip a coin w rbinom: 1 success out of 1 trial with probability = prob. 
   #this will equal 0 or 1.
   keep <- rbinom(1, 1, prob_bike)
   

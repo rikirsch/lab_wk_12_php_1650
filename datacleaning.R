@@ -3,17 +3,18 @@
 #' @description prepares bike data for use in simulation to optimize placement of bikes
 #' 
 #' @param bike_data read in a suitable data frame 
-#' @return an organized data frame without entries of the company resetting bikes, with properly formatted times, and with day and hour variables
+#' @return an organized data frame without entries of the company resetting bikes,
+#'  with properly formatted times, day, and hour variables
 
 bike_data_clean <- function(bike_data){
   
   #data cleaning decisions: 
   
-  #First, we don't need the observations where bikes are reset by the company—this is irrelevant to how many people are using bikes on a given day. 
+  #First, we don't need the observations where bikes are reset by the company
+  #this is irrelevant to how many people are using bikes on a given day. 
   
   cleaned_data <- bike_data %>%
-    #filter(start_station !="R" & end_station != "R") %>% #commenting out to fix bug in estimation
-    
+
     #make sure start_time and end_time are correct formats
     mutate(start_time = as.POSIXct(start_time, format = "%Y-%m-%d %H:%M:%S"), 
            end_time = as.POSIXct(end_time, format = "%Y-%m-%d %H:%M:%S")) %>%
