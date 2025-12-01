@@ -15,24 +15,17 @@
 
 #NOTES/QUESTIONS:
 #run_a_day is the simulation function,
-#run_a_day should return a df with the simulated start_station, end_station, time, and unhappy_customers 
+#run_a_day should return a df with the simulated start_station,
+#end_station, time, and unhappy_customers 
 #(1 - bike was not there, 0 - bike was there)
-#might not need start station or time to be returned 
-#(might switch to running off of start_station instead of end_station,
-#then will need to order by start_station and return the start station)
-
-#FOR THIS TO WORK/BE ACCURATE: must have simulation arranged by end_station!!!!!
-
-#how do I call the arrival_rates_df, do I call optimize from estimation? (then I can leave it like this)
-#but then I'll need to pass the num_bikes, num_days, and bike_step_size into the estimation params
-
-
+#might not need end station or time to be returned 
+#simulation must be arranged by start_station
 
 optimize <- function(arrival_rates_df, num_bikes, num_days = 10, bike_step_size = 1){
   #make an empty vector that will store the number of bikes at each numbered station
-  bike_placement_vect <- c(rep(0, times = n_distinct(arrival_rates_df$end_station)))
+  bike_placement_vect <- c(rep(0, times = n_distinct(arrival_rates_df$start_station)))
   #make a dataframe to store the final results/recommended initial bike placement
-  bike_placement_df <- data.frame(station = c(unique(arrival_rates_df$end_station)),
+  bike_placement_df <- data.frame(station = c(unique(arrival_rates_df$start_station)),
                                   num_initial_bikes = bike_placement_vect)
   
   #while not all bikes have been placed
