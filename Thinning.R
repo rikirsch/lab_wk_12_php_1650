@@ -37,3 +37,5 @@ thinning <- function(elapsed_time, arrival_rates_df,
   
   return(keep)
 }
+
+

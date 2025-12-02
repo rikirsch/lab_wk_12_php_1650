@@ -30,15 +30,16 @@ simulated_arrivals <- data.frame("start"=c(2), "end"=c(3), "arrival_time"=c())
 
 
 #test through simulating arrivals
+library(tidyverse)
 OBSERVED_bike_data<-read.csv('/Users/juliadubnoff/Downloads/sample_bike.csv')
 OBSERVED_bike_data<-bike_data_clean(OBSERVED_bike_data)
 OBSERVED_arrival_rates<-arrival_rates(OBSERVED_bike_data)
 
 #create dummy bike placement data set
 TEST_bike_placement<-OBSERVED_bike_data%>%
-  group_by(end_station)%>%
+  group_by(start_station)%>%
   summarize(num_initial_bikes=5)%>%
-  rename(station=end_station)
+  rename(station=start_station)
 
 
 TEST_arrivals<-run_a_day(OBSERVED_arrival_rates, TEST_bike_placement)

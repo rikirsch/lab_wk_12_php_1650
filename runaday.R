@@ -69,16 +69,19 @@ run_a_day <- function(arrival_rates_df, bike_placement){
       #RUN THINNING FUNCTION to see if observation will be kept
       keep <- thinning(elapsed_time, arrival_rates_df, 
                        start_station, end_station)
-      print(keep)
       #if keep is = 1, add a new row to simulated arrivals. otherwise, 
       # do nothing
-      if (keep==1){
+      if(is.na(keep)){
+        keep<-0
+      }
+      else if (keep==1){
         new_row <- data.frame("start_station" = 
                                  start_station, 
                                "end_station" = end_station, 
                                "arrival_time" = elapsed_time)
         simulated_arrivals <- rbind(simulated_arrivals, new_row)
       }
+      
 
     #end while loop
     }
@@ -99,7 +102,7 @@ run_a_day <- function(arrival_rates_df, bike_placement){
     rename(station = start_station)
   
   #join data set with bikes 
-  bike_simulation <- left_join(simulated_arrivals, bike_placement, by = station)
+  bike_simulation <- left_join(simulated_arrivals, bike_placement)
   
   #mutate to include unhappy_customers, event_success
   bike_simulation <- bike_simulation%>%
@@ -114,11 +117,14 @@ run_a_day <- function(arrival_rates_df, bike_placement){
       #do NOT add an unhappy customer. 
       
       #cycle through rows below and add a bike to each occurrence of the end 
-      #station that bike is moved to and subtract a bike from each occurence of 
+      #station that bike is moved to and subtract a bike from each occurrence of 
       #the start station that bike is taken from
       
       for (j in (i+1):nrow(bike_simulation)){
-        
+        if(is.na(bike_simulation$station[j]) | is.na(bike_simulation$station[i])){
+          #do nothing
+          break
+        }
         #if start stations are the same:
         if (bike_simulation$station[j] == bike_simulation$station[i]){
           bike_simulation$bikes_available[j] <- bike_simulation$bikes_available[j] -1
@@ -132,13 +138,15 @@ run_a_day <- function(arrival_rates_df, bike_placement){
         }
       
       }
+      
+    }
     #if bikes are NOT available 
     else {
       #turn the value of the unhapphy_customers in the row to 1
       bike_simulation$unhappy_customers[i] <- 1
     }
       
-    }
+    
     
     
   }
